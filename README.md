@@ -11,7 +11,7 @@ npm install --save server-provider
 
 ## Examples
 
-#####Creating one or more instances on DigitalOcean
+##### Creating one or more instances on DigitalOcean
 
 
 ```js
@@ -59,7 +59,7 @@ result: { batchId: 'cfa36a570079-55b98c5c-f54d-4ab8-8cde-9e584f866a8e',
      meta: { total: 3 } } }
 ```
 
-#####Listing all instances of a batch
+##### Listing all instances of a batch
 ```js
 import ServerProvider from 'server-provider';
 
@@ -95,7 +95,7 @@ result: [ { id: 49587785,
     batchId: 'cfa36a570079-55b98c5c-f54d-4ab8-8cde-9e584f866a8e' } ]
 ```
 
-#####Destroying all instances of a batch
+##### Destroying all instances of a batch
 ```js
 import ServerProvider from 'server-provider';
 
@@ -127,7 +127,7 @@ result: { batchId: 'cfa36a570079-55b98c5c-f54d-4ab8-8cde-9e584f866a8e',
      { id: 49587787, success: true } ] }
 ```
 
-#####Destroying all instances older than a certain time in minutes 
+##### Destroying all instances older than a certain time in minutes 
 ```js
 import ServerProvider from 'server-provider';
 
