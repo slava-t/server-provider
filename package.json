@@ -20,7 +20,6 @@
     "node-uuid": "^1.4.8",
     "sleep-promise": "^2.0.0"
   },
-  "private": true,
   "devDependencies": {
     "babel-cli": "^6.24.1",
     "babel-core": "^6.24.1",
