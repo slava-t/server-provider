@@ -1,10 +1,6 @@
 import DigitalOcean from 'do-wrapper';
-import uuid from 'node-uuid';
 import sleep from 'sleep-promise';
-
-const AUTO_CREATED_TAG = 'ad01a05d-35cf-4521-9ce7-a97f17fb9341';
-const BATCH_PREFIX_CODE = 'cfa36a570079';
-const BATCH_PREFIX = BATCH_PREFIX_CODE + '-';
+import {generateFullName, generateBatchId, parseVpsName} from './ut';
 
 export default class DoVpsProvider {
   constructor(options = {}) {
@@ -23,6 +19,7 @@ export default class DoVpsProvider {
       //ssh_keys: [],
       backups: false,
       ipv6: false,
+      tags: [],
       private_networking: false,
       monitoring: false,
     }, options.instanceOptions || {});
@@ -32,23 +29,18 @@ export default class DoVpsProvider {
     const timeout = options.timeout || 15 * 60 * 1000; //15 minutes
     const interval = options.interval || 5000; //5 seconds
 
-    const batchId = BATCH_PREFIX  + uuid.v4();
+    const batchId = generateBatchId();
     const serverOptions = Object.assign({}, this._defaultInstanceOptions, options.instanceOptions || {});
 
     const name = options.name || serverOptions.name;
 
-    const tags = serverOptions.tags || [];
-    tags.push(batchId);
-    tags.push(AUTO_CREATED_TAG);
-    serverOptions.tags = tags;
-
     let names = [];
     if(count > 1) {
       for(let i = 1; i <= count; ++i) {
-        names.push(name + '-' + i);
+        names.push(generateFullName(name + '-' + i, batchId));
       }
     } else {
-      names = [name]
+      names.push(generateFullName(name, batchId));
     }
 
     delete serverOptions.name;
@@ -60,8 +52,6 @@ export default class DoVpsProvider {
 
       await sleep(interval);
 
-      await this._waitForTags(batchId, count, timeout, interval);
-
       return await this._waitForActiveStatus(batchId, timeout, interval);
     } catch(err) {
       if(result) {
@@ -71,42 +61,33 @@ export default class DoVpsProvider {
     }
   }
 
+
   async list(batchId) {
-    const res = await this._api.tagsGetDroplets(AUTO_CREATED_TAG);
-    const droplets = res.body.droplets;
+    const droplets = await this._listDroplets(batchId);
     const servers = [];
-    for(const droplet of droplets) {
+    for(const d of droplets) {
+      const droplet = d.droplet;
       const server = {
         id: droplet.id,
-        ip: droplet.networks.v4[0].ip_address
+        ip: droplet.networks.v4[0].ip_address,
+        batchId: d.batchId
       };
-      const dropletBatchId = this._findBatchId(droplet.tags);
-      if(dropletBatchId) {
-        server.batchId = dropletBatchId;
-      }
       if(batchId) {
-        if(dropletBatchId === batchId) {
-          servers.push(server);
-        }
-      } else {
-        servers.push(server);
+        server.batchId = batchId;
       }
+      servers.push(server);
     }
     return servers;
   }
 
   async release(batchId) {
-    const res = await this._api.tagsGetDroplets(batchId);
-    const droplets = res.body.droplets;
+    const droplets = await this._listDroplets(batchId);
 
     const servers = [];
     let errors = 0;
-    for(const droplet of droplets) {
+    for(const d of droplets) {
+      const droplet = d.droplet;
       try {
-        if(!this._hasTag(droplet, batchId)) {
-          throw new Error('The droplet does not belong to this batch');
-        }
-
         await this._api.dropletsDelete(droplet.id);
         servers.push({id: droplet.id, success: true});
       } catch(err) {
@@ -122,20 +103,17 @@ export default class DoVpsProvider {
   }
 
   async releaseOlderThan(minutes) {
-    const res = await this._api.tagsGetDroplets(AUTO_CREATED_TAG);
-    const droplets = res.body.droplets;
+    const droplets = await this._listDroplets();
 
     const servers = [];
     let errors = 0;
     const time = minutes * 60 * 1000;
     const now = Date.now();
-    for(const droplet of droplets) {
+    for(const d of droplets) {
+      const droplet = d.droplet;
       try {
         const createdAt = Date.parse(droplet.created_at);
         if(now - createdAt > time) {
-          if (!this._hasTag(droplet, AUTO_CREATED_TAG)) {
-            throw new Error('The droplet doesn\'t have the auto creation tag');
-          }
           await this._api.dropletsDelete(droplet.id);
           servers.push({id: droplet.id, success: true});
         }
@@ -150,39 +128,19 @@ export default class DoVpsProvider {
     }
   }
 
-  _hasTag(droplet, tag) {
-    const tags = droplet.tags || [];
-    for(const t of tags) {
-      if(tag === t) {
-        return true;
-      }
-    }
-    return false;
-  }
-
-  _findBatchId(tags) {
-    if(Array.isArray(tags)) {
-      for(const tag of tags) {
-        if(tag.startsWith(BATCH_PREFIX)) {
-          return tag;
+  async _listDroplets(batchId) {
+    const res = await this._api.dropletsGetAll({});
+    const droplets = res.body.droplets;
+    const result = [];
+    for(const droplet of droplets) {
+      const nameComponents = parseVpsName(droplet.name);
+      if(nameComponents.batchId) {
+        if(!batchId || batchId === nameComponents.batchId) {
+          result.push({droplet, batchId: nameComponents.batchId});
         }
       }
     }
-  }
-
-  async _waitForTags(tag, count, timeout = 15 * 60 * 1000, interval = 10000) {
-    const start = Date.now();
-    while(Date.now() - start <= timeout) {
-      if(Date.now() - start > interval / 2) {
-        await sleep(interval);
-      }
-      const result = await this._api.tagsGetDroplets(tag);
-      const droplets = result.body.droplets;
-      if(droplets.length >= count) {
-        return result;
-      }
-    }
-    throw new Error('Time out');
+    return result;
   }
 
   async _waitForActiveStatus(batchId, timeout = 15 * 60 * 1000, interval = 10000) {
@@ -191,22 +149,25 @@ export default class DoVpsProvider {
       if(Date.now() - start > interval / 2) {
         await sleep(interval);
       }
-      const result = await this._api.tagsGetDroplets(batchId);
-      const droplets = result.body.droplets;
+      const rawDroplets = await this._listDroplets(batchId);
       const servers = [];
-      for(const droplet of droplets) {
+      const droplets = [];
+      for(const d of rawDroplets) {
+        const droplet = d.droplet;
         if(droplet.status === 'active') {
+          droplets.push(droplet);
           servers.push({
             id: droplet.id,
             ip: droplet.networks.v4[0].ip_address
           })
         }
       }
-      if(droplets.length === servers.length) {
+
+      if(rawDroplets.length === servers.length) {
         return {
           batchId,
           servers,
-          rawInfo: result.body
+          rawInfo: {droplets}
         }
       }
     }

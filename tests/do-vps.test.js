@@ -1,4 +1,5 @@
 import ServerProvider from '../dist';
+import {isId, parseVpsName} from '../dist/ut';
 import DoVpsApiFake from './do-vps-api-fake'
 import chai from 'chai';
 
@@ -28,16 +29,17 @@ describe('DigitalOcean server provider', function() {
 
   function validateServer(data) {
     const {server, droplet, timeBefore, timeAfter, batchId, name} = data;
-
+    const parsedName = parseVpsName(droplet.name);
+    expect(parsedName.name).to.equal(name);
+    expect(parsedName.batchId).to.equal(batchId);
+    expect(isId(batchId)).to.equal(true);
     expect(server.ip.startsWith('192.168.')).to.equal(true);
-    expect(droplet.name).to.equal(name);
     expect(droplet.status).to.equal('active');
-
     const createdAt = Date.parse(droplet.created_at);
+
     expect(createdAt >= timeBefore && createdAt <= timeAfter).to.equal(true);
 
     const options = droplet._options;
-    const tagSet = new Set(options.tags);
 
     expect(options.region).to.equal('tor1');
     expect(options.size).to.equal('512mb');
@@ -46,26 +48,18 @@ describe('DigitalOcean server provider', function() {
     expect(options.ipv6).to.equal(false);
     expect(options.private_networking).to.equal(false);
     expect(options.monitoring).to.equal(false);
-
-    expect(tagSet.has('ad01a05d-35cf-4521-9ce7-a97f17fb9341')).to.equal(true);
-    expect(tagSet.has(batchId)).to.equal(true);
-    expect(options.tags.length).to.equal(2);
   }
 
   async function validateBatch(data) {
     const {batch, name, timeBefore, timeAfter, count} = data;
     const {servers, batchId} = batch;
 
-    expect(batch.batchId.startsWith('cfa36a570079-')).to.equal(true);
-
     const droplets = batch.rawInfo.droplets;
 
     let listedServers = await provider.list(batchId);
-
     expect(servers.length).to.equal(count);
     expect(droplets.length).to.equal(count);
     expect(listedServers.length).to.equal(count);
-
     for(let i = 0; i < count; ++i) {
       const server = servers[i];
       const droplet = droplets[i];
@@ -138,23 +132,22 @@ describe('DigitalOcean server provider', function() {
     const time1 = Date.now() - m27;
     const batch1 = await acquire(6, {name: 'a'});
     expect((await provider.list()).length).to.equal(6);
-    store.setCreationTime(batch1.batchId, time1);
-
+    store.setBatchCreationTime(batch1.batchId, time1);
 
     const time2 = Date.now() - m42;
     const batch2 = await acquire(8);
     expect((await provider.list()).length).to.equal(14);
-    store.setCreationTime(batch2.batchId, time2);
+    store.setBatchCreationTime(batch2.batchId, time2);
 
     const time3 = Date.now() - m35;
     const batch3 = await acquire(3, {name: 'test'});
     expect((await provider.list()).length).to.equal(17);
-    store.setCreationTime(batch3.batchId, time3);
+    store.setBatchCreationTime(batch3.batchId, time3);
+
 
     await validateBatch({batch: batch1, name: 'a', timeBefore: time1, timeAfter: time1, count: 6});
     await validateBatch({batch: batch2, name: 'vps', timeBefore: time2, timeAfter: time2, count: 8});
     await validateBatch({batch: batch3, name: 'test', timeBefore: time3, timeAfter: time3, count: 3});
-
     await provider.releaseOlderThan(40);
     expect((await provider.list()).length).to.equal(9);
     await validateBatch({batch: batch1, name: 'a', timeBefore: time1, timeAfter: time1, count: 6});

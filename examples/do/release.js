@@ -6,6 +6,7 @@ import ServerProvider from '../../src';
  */
 
 const apiKey = process.argv[2];
+const batchId = process.argv[3];
 
 const provider = new ServerProvider('do_vps', {
   apiKey

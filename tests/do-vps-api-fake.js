@@ -1,4 +1,6 @@
 import sleep from 'sleep-promise';
+import {parseVpsName} from '../dist/ut';
+
 let nextId = 1;
 function getNextId() {
   return nextId++;
@@ -37,10 +39,11 @@ class DoVpsStore {
     return droplets;
   }
 
-  getDropletsByTag(tag) {
+  getBatchDroplets(batchId) {
     return this.getDroplets(function(droplet) {
-      return new Set(droplet.tags).has(tag.toLocaleString());
-    })
+      const parsedName = parseVpsName(droplet.name);
+      return batchId && parsedName.batchId === batchId;
+    });
   }
 
   addDroplet(droplet) {
@@ -61,12 +64,27 @@ class DoVpsStore {
     }
   }
 
+  getAll() {
+    const droplets = [];
+    this.forEach(function(droplet) {
+      droplets.push(droplet);
+    });
+    return droplets;
+  }
+
   getSize() {
     return this._droplets.size;
   }
 
-  setCreationTime(tag, time) {
-    const droplets = this.getDropletsByTag(tag);
+  setBatchCreationTime(batchId, time) {
+    return this.setCreationTime(function(droplet) {
+      const parsedName = parseVpsName(droplet.name);
+      return batchId && parsedName.batchId === batchId;
+    }, time);
+  }
+
+  setCreationTime(predicate, time) {
+    const droplets = this.getDroplets(predicate);
     for(const droplet of droplets) {
       droplet.created_at = new Date(time).toISOString();
     }
@@ -79,9 +97,8 @@ export default class DoVpsApiFake {
     this._store = store;
     this._defaultWait = [10, 100];
     this._waitMap = {
-      beforeGettingTagDroplets: [2, 5],
-      afterGettingTagDroplets: [2, 5]
-    }
+      gettingAll: [1, 3]
+    };
   }
 
   getStore() {
@@ -110,55 +127,31 @@ export default class DoVpsApiFake {
     }
     const self = this;
     setTimeout(async function() {
-      await self._wait('beforeSettingTags');
-      self._setTags(droplets);
-      setTimeout(async function() {
-        await self._wait('beforeSettingIps');
-        self._setIps(droplets);
-        setTimeout(async function(){
-          await self._wait('beforeActivation');
-          self._activate(droplets);
-          await self._wait('afterActivation');
-        });
-      }) ;
-    })
+      await self._wait('beforeSettingIps');
+      self._setIps(droplets);
+      setTimeout(async function(){
+        await self._wait('beforeActivation');
+        self._activate(droplets);
+        await self._wait('afterActivation');
+      });
+    });
     return {body: {droplets: result}};
   }
 
-  async tagsGetDroplets(tag) {
-    await this._wait('beforeGettingTagDroplets');
-    const droplets = this._store.getDropletsByTag(tag);
-    await this._wait('afterGettingTagDroplets');
-    return {
-      body: {
-        droplets
-      }
-    };
+  async dropletsGetAll() {
+     const droplets = this._store.getAll();
+     await this._wait('gettingAll')
+     return {
+       body: {
+         droplets
+       }
+     };
   }
 
   async dropletsDelete(id) {
     await this._wait('beforeDeleting');
     this._store.deleteDroplet(id);
     await this._wait('afterDeleting');
-  }
-
-  _setTags(droplets) {
-    for(const dropletId of droplets.keys()) {
-      const droplet = droplets.get(dropletId);
-      if(Array.isArray(droplet._options.tags)) {
-        const tags = [];
-        for(const tag of droplet._options.tags) {
-          if(typeof tag !== 'string') {
-            throw new Error('Invalid tags');
-          }
-          if(typeof tag !== 'string' || !/^[a-zA-Z0-9:_\-.]+$/.test(tag) || tag.length > 255) {
-            throw new Error('Invalid tags');
-          }
-          tags.push(tag);
-        }
-        droplet.tags = tags;
-      }
-    }
   }
 
   _setIps(droplets) {
