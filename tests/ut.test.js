@@ -13,7 +13,6 @@ describe('parseVpsName', function() {
   function testParsingFullName(name) {
     const batchId = generateBatchId();
     const fullName = generateFullName(name, batchId);
-    console.log('fullName:', fullName);
     const components = fullName.split('-');
     const length = components.length;
     expect(length).to.equal(name.split('-').length + 2);

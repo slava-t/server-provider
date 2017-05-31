@@ -61,7 +61,6 @@ export default class DoVpsProvider {
     }
   }
 
-
   async list(batchId) {
     const droplets = await this._listDroplets(batchId);
     const servers = [];

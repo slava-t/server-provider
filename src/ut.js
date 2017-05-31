@@ -1,5 +1,7 @@
 import crypto from 'crypto';
+import childProcess from 'child_process';
 
+const exec = childProcess.exec;
 const ID_BIN_LEN = 16;
 const ID_LEN = ID_BIN_LEN * 2;
 const SERVICE_ID = '68a68fd3ccb7f4bf';
@@ -49,11 +51,38 @@ function parseVpsName(vpsName) {
   }
 }
 
+function getPortStatus(ip, port) {
+  return new Promise(function(resolve, reject) {
+    try {
+      const cmd = 'nmap -p ' + port + ' ' + ip +
+        ' | grep -E \'' + port + '/tcp\\s*[a-zA-Z]+\\s*ssh\'' +
+        ' | awk \'{print $2}\'';
+      exec(cmd, function(error, stdout, stderr) {
+        if(error) {
+          return resolve({
+            status: 'error',
+            error: error
+          });
+        }
+        return resolve({
+          status: stdout.trim()
+        });
+      });
+    } catch(err) {
+      return resolve({
+        status: 'error',
+        error: err
+      });
+    }
+  });
+}
+
 export {
   SERVICE_ID,
   isId,
   generateId,
   generateBatchId,
   parseVpsName,
-  generateFullName
+  generateFullName,
+  getPortStatus
 }

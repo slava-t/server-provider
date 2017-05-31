@@ -202,8 +202,8 @@ Returns an object
   - `errors` indicates the number of instances for which errors occurred while releasing
   - `servers` an array of objects corresponding to each instance in the batch
     - `id` is the id of the instance
-    - 'success' is true if the instance has been released successfully, otherwise is false
-    - 'error' is the error occurred while trying to release the instance
+    - `success` is true if the instance has been released successfully, otherwise is false
+    - `error` is the error occurred while trying to release the instance
 ### async ServerProvider.prototype.releaseOlderThan(timeInMinutes)
 Releases all instances created with this API which are older than the time provided in minutes.
 
@@ -212,5 +212,21 @@ Returns an object
   - `errors` indicates the number of instances for which errors occurred while releasing
   - `servers` an array of objects corresponding to each instance in the batch
     - `id` is the id of the instance
-    - 'success' is true if the instance has been released successfully, otherwise is false
-    - 'error' is the error occurred while trying to release the instance
+    - `success` is true if the instance has been released successfully, otherwise is false
+    - `error` is the error occurred while trying to release the instance
+    
+### async ServerProvider.prototype.waitForSshAccess(batchId, options)
+Waits for ssh ports to be opened. It assumes nmap, grep and awk are installed in your system.
+- `batchId` is the id of the batch to release.
+- `port` is the port to scan. Default is 22.
+- `options.timeout` is timeout value in milliseconds. Default value is 120000(2 minutes).
+- `options.interval` is the interval in milliseconds for scanning the port. Default value is 10000(every 10 seconds).
+
+##### Return value
+Returns an object 
+  - `errors` indicates the number of instances for which errors occurred while scanning ssh ports
+  - `servers` an array of objects corresponding to each instance in the batch
+    - `status` is 'open', 'close', 'filtered' or 'error'.
+    - `error` is the error occurred. This field is present only if status is 'error'.
+    - `tries` the number of tries to scan the ports. This field is used in tests.
+    
