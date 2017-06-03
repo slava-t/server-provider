@@ -11,8 +11,8 @@ if(!Number.isInteger(time)) {
   time = 180;
 }
 
-const provider = new ServerProvider('do_vps', {
-  apiKey
+const provider = new ServerProvider('linode_vps', {
+  auth: apiKey
 });
 
 provider.releaseOlderThan(time).then(function(result) {

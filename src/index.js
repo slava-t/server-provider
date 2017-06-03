@@ -1,9 +1,9 @@
 import sleep from 'sleep-promise';
-import DoVpsProvider from './do-vps-provider';
+import LinodeVpsProvider from './linode-vps-provider';
 import {isId, getPortStatus} from './ut';
 
 const vendorMap = {
-  do_vps: DoVpsProvider
+  linode_vps: LinodeVpsProvider
 }
 
 class ServerProvider {
@@ -34,14 +34,14 @@ class ServerProvider {
     const o = options || {};
     const timeout = o.timeout || 120 * 1000; //120 seconds
     const interval = o.interval || 10 * 1000; //try every 10 seconds
-    const port = options.port || 22;
+    const port = o.port || 22;
     const portStatusFunction = o.portStatusFunction || getPortStatus;
     if(!isId(batchId)) {
       throw new Error('Invalid batchId');
     }
-    const servers = await this.list(batchId);
+    const listResult = await this.list(batchId);
     const ips = new Set();
-    for(const server of servers) {
+    for(const server of listResult.servers) {
       ips.add(server.ip);
     }
     const start = Date.now();

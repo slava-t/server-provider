@@ -1,2 +1,0 @@
-#!/usr/bin/env bash
-curl -X GET --silent "https://api.digitalocean.com/v2/sizes?per_page=999" -H "Authorization: Bearer $1" | jq '.sizes | .[] | .slug'

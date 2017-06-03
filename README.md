@@ -1,7 +1,7 @@
 # Server-provider
 
 Server-provider is a promise based library for batch creation of VPS instances on different 
-cloud providers. In this version only Digital Ocean provider is implemented.
+cloud providers. In this version only Linode provider is implemented.
 
 ## Installation
 
@@ -11,14 +11,14 @@ npm install --save server-provider
 
 ## Examples
 
-##### Creating one or more instances on DigitalOcean
+##### Creating one or more instances on Linode 
 
 
 ```js
 import ServerProvider from 'server-provider';
 /*
   usage example:
-    babel-node acquire.js 98fc3ff8e5164876ef8bfc47f27bc16cc4a445e71bdf3c724ac4c992e3071c8d 3 'd4:e8:90:9c:a7:19:7f:3c:e3:4d:a8:db:88:b3:04:db'
+    babel-node acquire.js 98fc3ff8e5164876ef8bfc47f27bc16cc4a445e71bdf3c724ac4c992e3071c8d 3 'replace this with a public ssh key'
 */
 
 const apiKey = process.argv[2];
@@ -30,17 +30,17 @@ if(!Number.isInteger(count)) {
 
 let sshKey = process.argv[4];
 
-
-const provider = new ServerProvider('do_vps', {
-  name: 'test-server',
-  apiKey,
-  instanceOptions: {
-    size: '512mb',
-    ssh_keys: [sshKey]
+const provider = new ServerProvider('linode_vps', {
+  auth: apiKey,
+  instance: {
+    name: 'test-server',
+    size: '1gb',
+    sshKeys: [{public: sshKey}]
   }
 });
 
-provider.acquire(count).then(function(result) {
+provider.acquire(count).then(async function(result) {
+  await provider.waitForSshAccess(result.batchId);
   console.log('result:', result);
 }).catch(function(err) {
   console.error(err);
@@ -48,15 +48,20 @@ provider.acquire(count).then(function(result) {
 ```
 Output
 ```
-result: { batchId: 'cfa36a570079-55b98c5c-f54d-4ab8-8cde-9e584f866a8e',
+result: { batchId: '2d797257eb4f8b40116a015c844df3f2',
   servers: 
-   [ { id: 49587785, ip: '159.203.27.96' },
-     { id: 49587786, ip: '138.197.175.170' },
-     { id: 49587787, ip: '138.197.175.171' } ],
-  rawInfo: 
-   { droplets: [ [Object], [Object], [Object] ],
-     links: {},
-     meta: { total: 3 } } }
+   [ { id: 3218154,
+       batchId: '2d797257eb4f8b40116a015c844df3f2',
+       createdAt: '2017-06-07T20:45:20.242Z',
+       age: '0 minutes, 46 seconds',
+       rawInfo: [Object],
+       ip: '45.33.98.19' },
+     { id: 3218155,
+       batchId: '2d797257eb4f8b40116a015c844df3f2',
+       createdAt: '2017-06-07T20:45:20.242Z',
+       age: '0 minutes, 46 seconds',
+       rawInfo: [Object],
+       ip: '74.207.232.171' } ] }
 ```
 
 ##### Listing all instances of a batch
@@ -65,14 +70,14 @@ import ServerProvider from 'server-provider';
 
 /*
  usage example:
- babel-node list.js 98fc3ff8e5164876ef8bfc47f27bc16cc4a445e71bdf3c724ac4c992e3071c8d cfa36a570079-55b98c5c-f54d-4ab8-8cde-9e584f866a8e
+ babel-node list.js 98fc3ff8e5164876ef8bfc47f27bc16cc4a445e71bdf3c724ac4c992e3071c8d cfa36a57007955b98c5cf54d4ab88cde
  */
 
 const apiKey = process.argv[2];
 const batchId = process.argv[3];
 
-const provider = new ServerProvider('do_vps', {
-  apiKey
+const provider = new ServerProvider('linode_vps', {
+  auth: apiKey
 });
 
 provider.list(batchId).then(function(result) {
@@ -84,15 +89,19 @@ provider.list(batchId).then(function(result) {
 
 Output
 ```
-result: [ { id: 49587785,
-    ip: '159.203.27.96',
-    batchId: 'cfa36a570079-55b98c5c-f54d-4ab8-8cde-9e584f866a8e' },
-  { id: 49587786,
-    ip: '138.197.175.170',
-    batchId: 'cfa36a570079-55b98c5c-f54d-4ab8-8cde-9e584f866a8e' },
-  { id: 49587787,
-    ip: '138.197.175.171',
-    batchId: 'cfa36a570079-55b98c5c-f54d-4ab8-8cde-9e584f866a8e' } ]
+result: { servers: 
+   [ { id: 3218154,
+       batchId: '2d797257eb4f8b40116a015c844df3f2',
+       createdAt: '2017-06-07T20:45:20.242Z',
+       age: '4 minutes, 13 seconds',
+       rawInfo: [Object],
+       ip: '45.33.98.19' },
+     { id: 3218155,
+       batchId: '2d797257eb4f8b40116a015c844df3f2',
+       createdAt: '2017-06-07T20:45:20.242Z',
+       age: '4 minutes, 13 seconds',
+       rawInfo: [Object],
+       ip: '74.207.232.171' } ] }
 ```
 
 ##### Destroying all instances of a batch
@@ -101,14 +110,14 @@ import ServerProvider from 'server-provider';
 
 /*
  usage example:
- babel-node release.js 98fc3ff8e5164876ef8bfc47f27bc16cc4a445e71bdf3c724ac4c992e3071c8d cfa36a570079-55b98c5c-f54d-4ab8-8cde-9e584f866a8e
+ babel-node release.js 98fc3ff8e5164876ef8bfc47f27bc16cc4a445e71bdf3c724ac4c992e3071c8d cfa36a57007955b98c5cf54d4ab88cde
  */
 
 const apiKey = process.argv[2];
 const batchId = process.argv[3];
 
-const provider = new ServerProvider('do_vps', {
-  apiKey
+const provider = new ServerProvider('linode_vps', {
+  auth: apiKey
 });
 
 provider.release(batchId).then(function(result) {
@@ -119,15 +128,17 @@ provider.release(batchId).then(function(result) {
 ```
 Output
 ```
-result: { batchId: 'cfa36a570079-55b98c5c-f54d-4ab8-8cde-9e584f866a8e',
+result: { batchId: '2d797257eb4f8b40116a015c844df3f2',
   errors: 0,
   servers: 
-   [ { id: 49587785, success: true },
-     { id: 49587786, success: true },
-     { id: 49587787, success: true } ] }
+   [ { id: 3218154,
+       batchId: '2d797257eb4f8b40116a015c844df3f2',
+       success: true },
+     { id: 3218155,
+       batchId: '2d797257eb4f8b40116a015c844df3f2',
+       success: true } ] }
 ```
-
-##### Destroying all instances older than a certain time in minutes 
+##### Destroying all instances older than N minutes 
 ```js
 import ServerProvider from 'server-provider';
 
@@ -142,8 +153,8 @@ if(!Number.isInteger(time)) {
   time = 180;
 }
 
-const provider = new ServerProvider('do_vps', {
-  apiKey
+const provider = new ServerProvider('linode_vps', {
+  auth: apiKey
 });
 
 provider.releaseOlderThan(time).then(function(result) {
@@ -155,44 +166,70 @@ provider.releaseOlderThan(time).then(function(result) {
 Output
 ```
 result: { servers: 
-   [ { id: 49586177, success: true },
-     { id: 49586178, success: true },
-     { id: 49586179, success: true } ],
+   [ { id: 3218170,
+       batchId: '10ff8ede8757cf029f8e015c8454646d',
+       success: true },
+     { id: 3218171,
+       batchId: '10ff8ede8757cf029f8e015c8454646d',
+       success: true } ],
   errors: 0 }
 ```
 ## API
 
 ### new ServerProvider(vendor, options)
 
- - `vendor` is the id of the cloud provider. In this version only the 'do_vps' value is valid.
+ - `vendor` is the id of the cloud provider. In this version only the 'linode_vps' value is valid.
  - `options` is a set of options some of which are vendor specific.
-   - `name` is the default name of new instances. The default is `'vps'`.
-   - `apiKey` is the api key. For DigitalOcean is required. 
-   - `instanceOptions` is an object with default options for new instances. This options are passed to the vendor api. 
+   - `auth` is the vendor specific authentication credentials. For Linode is required and is a string representing a Linode API key. 
+   - `instance` is an object with default options for new server instances.  
+      - `name` is the name prefix for new instances. The default is `'vps'`.
+      - `dataCenter` is the data center or region for the created servers 
+      - `size` is the RAM of the new servers. One of: '1gb', '2gb', '4gb', '8gb' ...
+      - `distribution` the OS distribution to be installed on the new instances. If the value is one of special values it will be translated first to 
+        the vendor specific distribution name, otherwise it will be passed to the vendor API as is. Special values: 
+          - '@ubuntu' - the preferred Ubuntu version for this vendor
+          - '@ubuntu16' - Ubuntu 16.04 LTS
+          - '@ubuntu14' - Ubuntu 14.04 LTS
+          - '@debian'
+          - '@debian8'
+          - '@debian7'
+          - '@centos'
+          - '@centos7'
+          - '@centos6'
+          - '@fedora'
+          - '@fedora25'
+          - '@fedora24'
+      - `provider` is an object representing provider specific options 
+           
    - `api` is an object with an alternative implementation. This is mainly for unit testing.
 
-### async ServerProvider.prototype.acquire(count, options)
+### async ServerProvider.prototype.acquire(count[, options])
 It acquires one or more servers.
  - `count` is the number of instances to acquire. It defaults to 1 
- - `options` is an object representing options to pass to the vendor API.  
+ - `options` is the set of options for each instance. These values overwrite the corresponding values
+   of instance options passed to the ServerProvider constructor.
 
 ##### Return value
  - `batchId` is an id to reference this set of instances in other API calls.
  - `servers` is an array of objects 
     - `id` is the id of the instance
     - `ip` is the ip of the instance
- - `rawInfo` vendor specific info about the servers.
+    - `rawInfo` is vendor specific info about the servers.
    
-### async ServerProvider.prototype.list(batchId)
+### async ServerProvider.prototype.list([batchId])
 Queries the vendor API to get the needed list of servers
 - `batchId` is the id of the batch to list. If `batchId` is missing all the servers created with this API will be returned.
 
 ##### Return value
-An array of objects each one an instance.
-- `id` the id of the instance
-- `ip` the ip of the instance
-- `batchId` the batch id this instance belongs to
-
+An object.
+- `servers` - an array of objects
+  - `id` the id of the instance
+  - `ip` the ip of the instance
+  - `batchId` the batch id this instance belongs to
+  - `createdAt` a string representing the date the batch has been created
+  - `age` a string describing how old the batch is. 
+  - `rawInfo` is vendor specific information about the server
+  
 ### async ServerProvider.prototype.release(batchId)
 Releases the instances of a batch
 - `batchId` is the id of the batch to release.
@@ -202,6 +239,7 @@ Returns an object
   - `errors` indicates the number of instances for which errors occurred while releasing
   - `servers` an array of objects corresponding to each instance in the batch
     - `id` is the id of the instance
+    - `batchId` is the id of the batch the server belongs to
     - `success` is true if the instance has been released successfully, otherwise is false
     - `error` is the error occurred while trying to release the instance
 ### async ServerProvider.prototype.releaseOlderThan(timeInMinutes)
@@ -212,6 +250,7 @@ Returns an object
   - `errors` indicates the number of instances for which errors occurred while releasing
   - `servers` an array of objects corresponding to each instance in the batch
     - `id` is the id of the instance
+    - `batchId` is the id of the batch the server belongs to
     - `success` is true if the instance has been released successfully, otherwise is false
     - `error` is the error occurred while trying to release the instance
     

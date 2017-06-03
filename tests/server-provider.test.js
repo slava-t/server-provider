@@ -1,6 +1,5 @@
-import sleep from 'sleep-promise';
 import ServerProvider from '../dist';
-import DoVpsApiFake from './do-vps-api-fake'
+import LinodeVpsApiFake from './linode-vps-api-fake';
 import chai from 'chai';
 
 const  expect = chai.expect;
@@ -12,10 +11,10 @@ describe('Server provider', function() {
   let api;
 
   beforeEach(function () {
-    api = new DoVpsApiFake();
+    api = new LinodeVpsApiFake();
     store = api.getStore();
-    provider = new ServerProvider('do_vps', {
-      apiKey: 'someKey',
+    provider = new ServerProvider('linode_vps', {
+      auth: 'someKey',
       api
     });
   });
@@ -27,21 +26,22 @@ describe('Server provider', function() {
     }, options || {}));
   }
 
-  it('should correctly waits for ssh to be ready', async function() {
+  it('should correctly wait for ssh to be ready', async function() {
     let portStatus = 'close';
     async function getPortStatus(ip, port) {
       return {status: portStatus};
     };
     const batch = await acquire(2, {name: 'a'});
-    const promise = provider.waitForSshAccess(batch.batchId, {
-      timeout: 100,
+
+    setTimeout(function() {
+      portStatus = 'open';
+    }, 300);
+    const res = await provider.waitForSshAccess(batch.batchId, {
+      timeout: 1000,
       interval: 5,
       portStatusFunction: getPortStatus
     });
 
-    await sleep(20);
-    portStatus = 'open';
-    const res = await promise;
     expect(res.errors).to.equal(0);
     const servers = res.servers;
     expect(servers.length).to.equal(2);
