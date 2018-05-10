@@ -25,6 +25,10 @@ class ServerProvider {
   async release(batchId) {
     return this._provider.release(batchId);
   }
+  
+  async releaseByIp(ip) {
+    return this._provider.releaseByIp(ip);
+  }
 
   async releaseOlderThan(minutes) {
     return this._provider.releaseOlderThan(minutes);
