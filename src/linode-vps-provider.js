@@ -6,11 +6,12 @@ import {generateBatchId, createFullBatchId, waitForAsyncFunction, generatePasswo
   parseFullBatchId, parseBatchId, getAge} from './ut';
 
 const sizeMap = {
-  '1gb' : 'Linode 1024',
-  '2gb' : 'Linode 2048',
-  '4gb' : 'Linode 4096',
-  '8gb' : 'Linode 8192'
+  '1gb' : 'Nanode 1GB',
+  '2gb' : 'Linode 2GB',
+  '4gb' : 'Linode 4GB',
+  '8gb' : 'Linode 8GB'
 };
+
 
 const distributionMap = {
   '@ubuntu': 'Ubuntu 16.04 LTS',
