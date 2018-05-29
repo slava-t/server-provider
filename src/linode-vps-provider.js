@@ -91,6 +91,37 @@ export default class LinodeVpsProvider {
     await this._setNetworkInfo(linodes);
     return this._createResultObject(linodes);
   }
+  
+  async releaseByIp(ips) {
+
+    let arrayIps = Array.isArray(ips) ? ips : [ips]
+
+    const list = await this.list()
+    let errors = 0
+    const servers = []
+     
+    for(const ip of arrayIps) {
+      for(const server of list.servers ) {
+        if( server.ip === ip ) {
+          try {
+            console.log('' + server.ip + ' will be removed')
+            await this._api.call('linode.delete', {
+              LinodeID: server.id,
+              skipChecks: true
+            });
+            servers.push({id: server.id, ip: server.ip, batchId: server.batchId, success: true});
+          } catch(err) {
+            servers.push({id: server.id, batchId: server.batchId, success: false, error: err});
+            ++errors;
+          }
+        }
+      }
+    }
+    return {
+      errors,
+      servers
+    };
+  }
 
   async release(batchId) {
     if(!parseBatchId(batchId)) {
