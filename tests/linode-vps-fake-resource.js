@@ -196,7 +196,7 @@ function getPlanList() {
     },
     PRICE: 5,
     PLANID: 1,
-    LABEL: 'Linode 1024',
+    LABEL: 'Nanode 1GB',
     DISK: 20,
     RAM: 1024,
     HOURLY: 0.0075
@@ -217,7 +217,7 @@ function getPlanList() {
       },
       PRICE: 10,
       PLANID: 2,
-      LABEL: 'Linode 2048',
+      LABEL: 'Linode 2GB',
       DISK: 30,
       RAM: 2048,
       HOURLY: 0.015
@@ -238,7 +238,7 @@ function getPlanList() {
       },
       PRICE: 20,
       PLANID: 3,
-      LABEL: 'Linode 4096',
+      LABEL: 'Linode 4GB',
       DISK: 48,
       RAM: 4096,
       HOURLY: 0.03
@@ -259,7 +259,7 @@ function getPlanList() {
       },
       PRICE: 40,
       PLANID: 4,
-      LABEL: 'Linode 8192',
+      LABEL: 'Linode 8GB',
       DISK: 96,
       RAM: 8192,
       HOURLY: 0.06
@@ -280,7 +280,7 @@ function getPlanList() {
       },
       PRICE: 60,
       PLANID: 10,
-      LABEL: 'Linode 16384',
+      LABEL: 'Linode 16GB',
       DISK: 20,
       RAM: 16384,
       HOURLY: 0.09
