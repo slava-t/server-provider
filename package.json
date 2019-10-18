@@ -3,6 +3,9 @@
   "version": "0.5.1",
   "description": "Batch creation of server instances on various cloud providers",
   "main": "dist/index.js",
+  "bin": {
+    "sp": "./dist/cli.js"
+  },
   "scripts": {
     "build": "babel ./src --out-dir dist",
     "test": "mocha --compilers js:babel-core/register ./tests/*.test.js",
