@@ -1,4 +1,4 @@
-import ServerProvider from '../../src';
+const ServerProvider = require('../../src');
 /*
   usage example:
     babel-node acquire.js 98fc3ff8e5164876ef8bfc47f27bc16cc4a445e71bdf3c724ac4c992e3071c8d 3 'replace this with a public ssh key'

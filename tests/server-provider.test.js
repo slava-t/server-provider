@@ -1,6 +1,6 @@
-import ServerProvider from '../dist';
-import LinodeVpsApiFake from './linode-vps-api-fake';
-import chai from 'chai';
+const ServerProvider = require('../src');
+const LinodeVpsApiFake = require('./linode-vps-api-fake');
+const chai = require('chai');
 
 const  expect = chai.expect;
 

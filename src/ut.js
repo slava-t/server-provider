@@ -1,6 +1,6 @@
-import crypto from 'crypto';
-import sleep from 'sleep-promise';
-import childProcess from 'child_process';
+const crypto = require('crypto');
+const sleep = require('sleep-promise');
+const childProcess = require('child_process');
 
 const exec = childProcess.exec;
 const ID_BIN_LEN = 16;
@@ -190,7 +190,7 @@ async function waitForAsyncFunction(f, timeout, interval) {
 }
 
 
-export {
+module.exports = {
   SERVICE_ID,
   isId,
   generateId,
@@ -208,4 +208,4 @@ export {
   generateTimestampedId,
   getAge,
   injectIdTimestamp
-}
+};

@@ -1,4 +1,4 @@
-import ServerProvider from '../../src';
+const ServerProvider = require('../../src');
 
 /*
  usage example:

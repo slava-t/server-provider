@@ -1,6 +1,6 @@
-import * as resources from './linode-vps-fake-resource';
-import * as ut from './ut'
-import * as utd from '../dist/ut';
+const resources = require('./linode-vps-fake-resource');
+const ut = require('./ut');
+const utd = require('../src/ut');
 
 const dispatchMap = {
   'linode.create': '_create_linode',
@@ -396,4 +396,4 @@ class LinodeVpsApiFake {
   }
 }
 
-export default LinodeVpsApiFake;
+module.exports = LinodeVpsApiFake;

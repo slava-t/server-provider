@@ -1,4 +1,4 @@
-import sleep from 'sleep-promise';
+const sleep = require('sleep-promise');
 
 let nextId = 1;
 function getNextId() {
@@ -36,7 +36,7 @@ function waitFunction(waitTimeFunc) {
     await sleep(waitTimeFunc(waitId));
   }
 }
-export {
+module.exports = {
   getNextIp,
   getNextId,
   waitTime,

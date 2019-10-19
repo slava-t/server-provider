@@ -2,15 +2,12 @@
   "name": "server-provider",
   "version": "0.5.1",
   "description": "Batch creation of server instances on various cloud providers",
-  "main": "dist/index.js",
+  "main": "src/index.js",
   "bin": {
-    "sp": "./dist/cli.js"
+    "sp": "./src/cli.js"
   },
   "scripts": {
-    "build": "babel ./src --out-dir dist",
-    "test": "mocha --compilers js:babel-core/register ./tests/*.test.js",
-    "pretest": "npm run build",
-    "preinstall": "npm install && npm run build"
+    "test": "mocha ./tests/*.test.js"
   },
   "repository": {
     "type": "git",
@@ -19,19 +16,12 @@
   "author": "SlavaT",
   "license": "MIT",
   "dependencies": {
-    "babel-runtime": "^6.23.0",
-    "do-wrapper": "^3.11.1",
     "linode-api": "^0.1.2",
-    "merge": "^1.2.0",
-    "node-uuid": "^1.4.8",
-    "sleep-promise": "^2.0.0"
+    "merge": "^1.2.1",
+    "sleep-promise": "^8.0.1"
   },
   "devDependencies": {
-    "babel-cli": "^6.24.1",
-    "babel-core": "^6.24.1",
-    "babel-plugin-transform-runtime": "^6.23.0",
-    "babel-preset-env": "^1.4.0",
-    "chai": "^3.5.0",
-    "mocha": "^3.4.1"
+    "chai": "^4.2.0",
+    "mocha": "^6.2.2"
   }
 }

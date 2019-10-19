@@ -1,6 +1,6 @@
-import sleep from 'sleep-promise';
-import LinodeVpsProvider from './linode-vps-provider';
-import {isId, getPortStatus} from './ut';
+const sleep = require('sleep-promise');
+const LinodeVpsProvider = require('./linode-vps-provider');
+const {isId, getPortStatus} = require('./ut');
 
 const vendorMap = {
   linode_vps: LinodeVpsProvider
@@ -25,7 +25,7 @@ class ServerProvider {
   async release(batchId) {
     return this._provider.release(batchId);
   }
-  
+
   async releaseByIp(ip) {
     return this._provider.releaseByIp(ip);
   }
@@ -92,5 +92,5 @@ class ServerProvider {
   }
 }
 
-export default ServerProvider
+module.exports = ServerProvider;
 

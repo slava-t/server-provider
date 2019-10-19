@@ -1,9 +1,9 @@
-import linodeApi from 'linode-api';
-import merge from 'merge';
-import sleep from 'sleep-promise';
-import linode from 'linode-api';
-import {generateBatchId, createFullBatchId, waitForAsyncFunction, generatePassword,
-  parseFullBatchId, parseBatchId, getAge} from './ut';
+const linodeApi = require('linode-api');
+const merge = require('merge');
+const sleep = require('sleep-promise');
+const linode = require('linode-api');
+const {generateBatchId, createFullBatchId, waitForAsyncFunction, generatePassword,
+  parseFullBatchId, parseBatchId, getAge} = require('./ut');
 
 const sizeMap = {
   '1gb' : 'Nanode 1GB',
@@ -48,7 +48,7 @@ function createLinodeApi(apiKey) {
   };
 }
 
-export default class LinodeVpsProvider {
+module.exports = class LinodeVpsProvider {
   constructor(options = {}) {
     const apiKey = options.auth;
     if(typeof apiKey !== 'string') {

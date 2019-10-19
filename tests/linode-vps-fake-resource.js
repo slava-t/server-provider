@@ -36,7 +36,7 @@ function getLinodeDistributions() {
   return getDistributionList();
 }
 
-export {
+module.exports = {
   getLinodeDataCenterMap,
   getLinodeDataCenters,
   getLinodeKernelMap,
